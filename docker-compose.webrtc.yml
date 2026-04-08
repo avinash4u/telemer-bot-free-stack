@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  janus:
+    image: meetecho/janus-gateway:latest
+    ports:
+      - "8088:8088"     # WebSockets
+      - "8188:8188"     # HTTP API
+      - "7088:7088"     # RTP
+    environment:
+      - JANUS_SERVER_NAME=janus
+    volumes:
+      - ./configs/janus:/opt/janus/etc/janus
+    networks:
+      - telemer-network
+
+  webrtc-app:
+    build: ./webrtc-app
+    ports:
+      - "3001:3000"
+    environment:
+      - JANUS_WS_URL=ws://localhost:8088
+    depends_on:
+      - janus
+    networks:
+      - telemer-network
+
+networks:
+  telemer-network:
+    external: true

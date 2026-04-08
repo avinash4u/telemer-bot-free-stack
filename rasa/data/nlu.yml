@@ -1,0 +1,70 @@
+version: "3.1"
+nlu:
+- intent: greet
+  examples: |
+    - hello
+    - hi
+    - namaste
+    - good morning
+    - hello ji
+- intent: give_consent
+  examples: |
+    - yes I consent
+    - yes you can ask
+    - yes please continue
+    - haan pooch sakte ho
+    - haan consent deta hoon
+    - ji haan pooch lijiye
+- intent: deny_consent
+  examples: |
+    - no I do not consent
+    - do not ask now
+    - nahi abhi nahi
+    - I don't want to continue
+- intent: nil_disclosure
+  examples: |
+    - no I have nothing to disclose
+    - no health issues
+    - I am fine nothing to mention
+    - no disease no medicine no surgery
+    - mujhe kuch disclose nahi karna hai
+    - koi bimari nahi hai
+    - koi surgery ya hospitalization nahi hua
+    - kuch bhi medical issue nahi hai
+- intent: has_disclosure
+  examples: |
+    - I have diabetes
+    - I take BP medication
+    - I had surgery last year
+    - I was hospitalized recently
+    - mujhe diabetes hai
+    - BP ki dawai chal rahi hai
+    - pichhle saal operation hua tha
+    - recently admit hua tha
+- intent: reschedule_request
+  examples: |
+    - call me later
+    - please call tomorrow
+    - I am busy now
+    - baad mein call karo
+    - kal call karna
+    - abhi busy hoon
+- intent: not_reachable
+  examples: |
+    - wrong time
+    - network issue
+    - cannot hear you
+    - unreachable
+    - awaaz nahi aa rahi
+    - baad mein try karo
+- intent: affirm
+  examples: |
+    - yes
+    - haan
+    - correct
+    - right
+- intent: deny
+  examples: |
+    - no
+    - nahi
+    - wrong

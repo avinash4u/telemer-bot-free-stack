@@ -1,0 +1,32 @@
+<include>
+  <!-- FreeVoIPDeal SIP Trunk Configuration -->
+  <gateway name="freevoipdeal_trunk">
+    <!-- Your FreeVoIPDeal username -->
+    <param name="username" value="YOUR_FREEVOIPDEAL_USERNAME"/>
+    <!-- Your FreeVoIPDeal password -->
+    <param name="password" value="YOUR_FREEVOIPDEAL_PASSWORD"/>
+    <!-- FreeVoIPDeal SIP realm -->
+    <param name="realm" value="sip.freevoipdeal.com"/>
+    <!-- From user (same as username) -->
+    <param name="from-user" value="YOUR_FREEVOIPDEAL_USERNAME"/>
+    <!-- From domain (FreeVoIPDeal SIP server) -->
+    <param name="from-domain" value="sip.freevoipdeal.com"/>
+    <!-- FreeVoIPDeal SIP proxy server -->
+    <param name="proxy" value="sip.freevoipdeal.com"/>
+    <!-- Register with FreeVoIPDeal -->
+    <param name="register" value="true"/>
+    <!-- Use UDP transport -->
+    <param name="register-transport" value="udp"/>
+    <!-- Registration expires in 1 hour -->
+    <param name="expire-seconds" value="3600"/>
+    <!-- Retry registration every 30 seconds -->
+    <param name="retry-seconds" value="30"/>
+    <!-- Use caller ID from registration -->
+    <param name="caller-id-in-from" value="true"/>
+    <!-- Include extension in contact header -->
+    <param name="extension-in-contact" value="true"/>
+    <!-- Additional settings -->
+    <param name="context" value="default"/>
+    <param name="dialplan" value="XML"/>
+  </gateway>
+</include>

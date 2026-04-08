@@ -1,0 +1,23 @@
+<include>
+  <profile name="internal">
+    <param name="user-agent-string" value="FreeSWITCH"/>
+    <param name="debug" value="3"/>
+    <param name="sip-ip" value="0.0.0.0"/>
+    <param name="sip-port" value="5060"/>
+    <param name="dialplan" value="XML"/>
+    <param name="context" value="default"/>
+    <param name="dtmf-duration" value="2000"/>
+    <param name="codec-prefs" value="PCMU,PCMA"/>
+    <param name="use-rtp-timer" value="true"/>
+    <param name="rtp-timer-name" value="soft"/>
+    <param name="rtp-ip" value="0.0.0.0"/>
+    <param name="rtp-port-range-start" value="16384"/>
+    <param name="rtp-port-range-end" value="16464"/>
+    <param name="manage-presence" value="false"/>
+    <param name="inbound-codec-negotiation" value="generous"/>
+    <param name="nonce-ttl" value="60"/>
+    <param name="auth-calls" value="true"/>
+    <param name="auth-all-packets" value="false"/>
+    <param name="ext-rtp-ip" value="autonat:0.0.0.0"/>
+  </profile>
+</include>

@@ -1,0 +1,21 @@
+version: "3.1"
+intents:
+  - greet
+  - give_consent
+  - deny_consent
+  - nil_disclosure
+  - has_disclosure
+  - reschedule_request
+  - not_reachable
+  - affirm
+  - deny
+responses:
+  utter_greet:
+    - text: "Hello, this is the TeleMER health verification assistant calling from ACKO."
+  utter_ask_consent:
+    - text: "With your permission, may I ask a few quick health-related questions for policy verification?"
+  utter_ask_disclosure:
+    - text: "Do you have any medical condition, symptoms, medication, surgery or hospitalization to disclose?"
+session_config:
+  session_expiration_time: 60
+  carry_over_slots_to_new_session: true

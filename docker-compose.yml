@@ -1,0 +1,99 @@
+services:
+  orchestrator:
+    build: .
+    env_file: .env
+    ports:
+      - "8000:8000"
+    depends_on:
+      - postgres
+      - redis
+      - minio
+      - rabbitmq
+      # - asr
+      # - tts
+      - sentiment
+      # - ollama
+      # - rasa
+
+  postgres:
+    image: postgres:16
+    environment:
+      POSTGRES_DB: telemer
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+    ports: ["5432:5432"]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+
+  redis:
+    image: redis:7
+    ports: ["6379:6379"]
+
+  minio:
+    image: minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: minioadmin
+      MINIO_ROOT_PASSWORD: minioadmin
+    ports:
+      - "9002:9000"
+      - "9003:9001"
+    volumes:
+      - minio:/data
+
+  rabbitmq:
+    image: rabbitmq:4-management
+    ports:
+      - "5672:5672"
+      - "15672:15672"
+
+  ollama:
+    image: ollama/ollama:latest
+    ports: ["11434:11434"]
+    volumes:
+      - ollama:/root/.ollama
+
+  asr:
+    build: ./services/asr
+    ports: ["8010:8010"]
+
+  tts:
+    build: ./services/tts
+    ports: ["8020:8020"]
+
+  sentiment:
+    build: ./services/sentiment
+    ports: ["8030:8030"]
+
+  rasa:
+    image: rasa/rasa:3.6.21-full
+    command: run --enable-api --cors "*" --debug
+    ports: ["5005:5005"]
+    volumes:
+      - ./rasa:/app
+
+  whatsapp:
+    build: ./whatsapp
+    ports: ["3000:3000"]
+    profiles: ["optional"]
+
+  freeswitch:
+    image: safarov/freeswitch:latest
+    ports:
+      - "5060:5060/udp"     # SIP
+      - "5060:5060/tcp"     # SIP
+      - "5080:5080/udp"     # SIP-TLS
+      - "8021:8021/tcp"     # ESL
+      - "16384-16464:16384-16464/udp"  # RTP
+    volumes:
+      - ./configs/freeswitch:/etc/freeswitch
+    environment:
+      - FS_ESL_HOST=freeswitch
+      - FS_ESL_PORT=8021
+      - FS_ESL_PASSWORD=ClueCon
+    command: freeswitch -nonat -nonat
+
+volumes:
+  pgdata:
+  minio:
+  ollama:

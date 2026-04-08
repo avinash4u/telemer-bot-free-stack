@@ -1,0 +1,19 @@
+version: '3.8'
+
+services:
+  asterisk:
+    image: andrewmagruder/asterisk:latest
+    ports:
+      - "5061:5060/udp"     # SIP
+      - "5038:5038/tcp"     # AMI (Asterisk Manager Interface)
+    volumes:
+      - ./configs/asterisk:/etc/asterisk
+    environment:
+      - ASTERISK_USER=admin
+      - ASTERISK_PASSWORD=admin123
+    networks:
+      - telemer-network
+
+networks:
+  telemer-network:
+    external: true

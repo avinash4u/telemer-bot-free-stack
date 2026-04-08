@@ -1,0 +1,10 @@
+<include>
+  <extension name="telemer-outbound">
+    <condition field="destination_number" expression="^(9\\d+)$">
+      <action application="answer"/>
+      <action application="set" data="hangup_after_bridge=true"/>
+      <action application="set" data="continue_on_fail=true"/>
+      <action application="socket" data="orchestrator:8021 async full"/>
+    </condition>
+  </extension>
+</include>

@@ -1,0 +1,11 @@
+<include>
+  <user id="test_user">
+    <params>
+      <param name="password" value="test_password"/>
+      <param name="vm-password" value="test_password"/>
+    </params>
+    <variables>
+      <variable name="user_context" value="default"/>
+    </variables>
+  </user>
+</include>
