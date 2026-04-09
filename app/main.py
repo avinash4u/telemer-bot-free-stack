@@ -1,4 +1,5 @@
 from fastapi import FastAPI
+from fastapi.middleware.cors import CORSMiddleware
 from app.routers import health, calls
 from app.core.config import settings
 from app.core.logging import configure_logging
@@ -9,6 +10,15 @@ configure_logging()
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(title="TeleMER Voice Bot Orchestrator", version="1.0.0")
+
+# Add CORS middleware
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allow all origins for development
+    allow_credentials=True,
+    allow_methods=["*"],  # Allow all methods
+    allow_headers=["*"],  # Allow all headers
+)
 app.include_router(health.router)
 app.include_router(calls.router, prefix="/calls", tags=["calls"])
 

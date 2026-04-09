@@ -16,7 +16,7 @@ class Settings(BaseSettings):
     tts_url: str
     sentiment_url: str
     llm_url: str
-    llm_model: str = "llama3.2:3b"
+    llm_model: str = "tinyllama"
     fs_esl_host: str = "freeswitch"
     fs_esl_port: int = 8021
     fs_esl_password: str = "ClueCon"

@@ -18,8 +18,8 @@ class CallingService:
             # Format phone number (remove +, add 00 if needed)
             formatted_number = self._format_phone_number(phone_number)
             
-            # Create call via FreeSWITCH internal SIP profile
-            command = f"originate {{origination_caller_id_name={caller_id},origination_caller_id_number={caller_id}}}user/test_user@internal &transfer(9001)"
+            # Create call via FreeSWITCH external SIP gateway
+            command = f"originate {{origination_caller_id_name={caller_id},origination_caller_id_number={caller_id}}}sofia/gateway/freevoipdeal_trunk/{formatted_number} &transfer(9001)"
             
             result = await self._execute_freeswitch_command(command)
             

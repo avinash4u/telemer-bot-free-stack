@@ -1,0 +1,331 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TeleMER Bot - Free WebRTC Calling</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 20px;
+            color: white;
+        }
+        .container {
+            max-width: 800px;
+            margin: 0 auto;
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+        }
+        h1 {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 2.5em;
+        }
+        .call-controls {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+        }
+        button {
+            background: #4CAF50;
+            color: white;
+            border: none;
+            padding: 15px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 200px;
+        }
+        button:hover {
+            background: #45a049;
+            transform: scale(1.05);
+        }
+        button:disabled {
+            background: #cccccc;
+            cursor: not-allowed;
+            transform: scale(1);
+        }
+        .hangup {
+            background: #f44336;
+        }
+        .hangup:hover {
+            background: #da190b;
+        }
+        .status {
+            text-align: center;
+            font-size: 18px;
+            margin: 20px 0;
+            padding: 15px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+        }
+        .transcript {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .ai-response {
+            background: rgba(76, 175, 80, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        .user-input {
+            background: rgba(33, 150, 243, 0.2);
+            padding: 10px;
+            border-radius: 5px;
+            margin: 10px 0;
+        }
+        input[type="text"] {
+            width: 100%;
+            padding: 15px;
+            border: none;
+            border-radius: 10px;
+            font-size: 16px;
+            background: rgba(255, 255, 255, 0.9);
+            margin: 10px 0;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏥 TeleMER Bot</h1>
+        <div class="instructions">
+            <h3>📞 Free WebRTC Calling</h3>
+            <p>1. Click "Start Call" to connect to TeleMER AI bot</p>
+            <p>2. Allow microphone access when prompted</p>
+            <p>3. Speak naturally - the AI will respond</p>
+            <p>4. Type messages for text-based interaction</p>
+        </div>
+
+        <div class="status" id="status">Ready to call</div>
+
+        <div class="call-controls">
+            <button id="startCall" onclick="startCall()">📞 Start Call</button>
+            <button id="hangupCall" onclick="hangupCall()" class="hangup" disabled>📵 Hang Up</button>
+        </div>
+
+        <div>
+            <input type="text" id="textInput" placeholder="Type your message here..." onkeypress="handleKeyPress(event)">
+            <button onclick="sendTextMessage()">💬 Send Message</button>
+        </div>
+
+        <div class="transcript" id="transcript">
+            <div class="ai-response">🤖 TeleMER Bot: Hello! I'm your AI medical assistant. How can I help you today?</div>
+        </div>
+    </div>
+
+    <script>
+        let isCallActive = false;
+        let recognition;
+        let callId = null;
+
+        // Initialize speech recognition
+        if ('webkitSpeechRecognition' in window) {
+            recognition = new webkitSpeechRecognition();
+            recognition.continuous = true;
+            recognition.interimResults = true;
+            recognition.lang = 'en-US';
+
+            recognition.onresult = function(event) {
+                let finalTranscript = '';
+                let interimTranscript = '';
+
+                for (let i = event.resultIndex; i < event.results.length; i++) {
+                    const transcript = event.results[i][0].transcript;
+                    if (event.results[i].isFinal) {
+                        finalTranscript += transcript + ' ';
+                    } else {
+                        interimTranscript += transcript;
+                    }
+                }
+
+                if (finalTranscript) {
+                    processUserInput(finalTranscript);
+                }
+            };
+
+            recognition.onerror = function(event) {
+                console.error('Speech recognition error:', event.error);
+                updateStatus('Speech recognition error. Please try again.');
+            };
+        }
+
+        function startCall() {
+            if (isCallActive) return;
+            
+            isCallActive = true;
+            document.getElementById('startCall').disabled = true;
+            document.getElementById('hangupCall').disabled = false;
+            updateStatus('📞 Connecting to TeleMER AI...');
+
+            // Start speech recognition
+            if (recognition) {
+                recognition.start();
+            }
+
+            // Create call case
+            createCallCase();
+
+            updateStatus('🤖 Connected to TeleMER AI - You can speak now!');
+        }
+
+        function hangupCall() {
+            if (!isCallActive) return;
+            
+            isCallActive = false;
+            document.getElementById('startCall').disabled = false;
+            document.getElementById('hangupCall').disabled = true;
+            updateStatus('📞 Call ended');
+
+            // Stop speech recognition
+            if (recognition) {
+                recognition.stop();
+            }
+
+            addTranscript('📞 Call ended', 'system');
+        }
+
+        function createCallCase() {
+            fetch('http://localhost:8000/calls', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    proposal_id: 'WEBRTC_' + Date.now(),
+                    customer_phone: '+1234567890',
+                    language: 'en',
+                    metadata: { source: 'webrtc', timestamp: new Date().toISOString() }
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                callId = data.id;
+                console.log('Call case created:', callId);
+            })
+            .catch(error => {
+                console.error('Error creating call case:', error);
+            });
+        }
+
+        function processUserInput(text) {
+            if (!callId) return;
+
+            addTranscript('👤 You: ' + text, 'user');
+
+            // Send to AI processing
+            fetch(`http://localhost:8000/calls/${callId}/utterance`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    text: text,
+                    session_id: 'webrtc_session'
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                console.log('AI Response:', data);
+                
+                // Generate AI response based on intent and sentiment
+                let aiResponse = generateAIResponse(data);
+                addTranscript('🤖 TeleMER: ' + aiResponse, 'ai');
+                
+                // Speak response
+                speakResponse(aiResponse);
+            })
+            .catch(error => {
+                console.error('Error processing utterance:', error);
+                addTranscript('🤖 TeleMER: Sorry, I had trouble processing that. Please try again.', 'ai');
+            });
+        }
+
+        function generateAIResponse(data) {
+            const intent = data.nlu?.intent?.name || 'unknown';
+            const sentiment = data.sentiment?.negative || 0;
+
+            // Check for LLM errors
+            if (data.error || (data.nlu && data.nlu.error)) {
+                return 'I understand you. My AI processing is currently limited, but I can still help. Would you like me to connect you with a human agent?';
+            }
+
+            if (intent === 'nil_disclosure') {
+                return 'Thank you for letting me know. Is there anything else I can help you with today?';
+            } else if (intent === 'has_disclosure') {
+                return 'I understand you have medical information to share. Let me help you with that process. I can connect you with a healthcare professional to discuss your medical details.';
+            } else if (sentiment > 0.8) {
+                return 'I understand you may be frustrated. Let me connect you with a human agent who can better assist you.';
+            } else if (intent === 'affirm') {
+                return 'Great! Thank you for confirming. How else can I help you today?';
+            } else if (intent === 'deny') {
+                return 'I understand. Is there anything else I can assist you with?';
+            } else if (intent === 'greet') {
+                return 'Hello! Welcome to TeleMER. How can I assist you today?';
+            } else {
+                return 'Thank you for sharing that. I\'m here to help. Could you tell me more about what you need?';
+            }
+        }
+
+        function speakResponse(text) {
+            if ('speechSynthesis' in window) {
+                const utterance = new SpeechSynthesisUtterance(text);
+                utterance.rate = 0.9;
+                utterance.pitch = 1.0;
+                speechSynthesis.speak(utterance);
+            }
+        }
+
+        function sendTextMessage() {
+            const input = document.getElementById('textInput');
+            const text = input.value.trim();
+            
+            if (text) {
+                processUserInput(text);
+                input.value = '';
+            }
+        }
+
+        function handleKeyPress(event) {
+            if (event.key === 'Enter') {
+                sendTextMessage();
+            }
+        }
+
+        function addTranscript(message, type) {
+            const transcript = document.getElementById('transcript');
+            const div = document.createElement('div');
+            div.className = type === 'user' ? 'user-input' : type === 'ai' ? 'ai-response' : '';
+            div.textContent = message;
+            transcript.appendChild(div);
+            transcript.scrollTop = transcript.scrollHeight;
+        }
+
+        function updateStatus(message) {
+            document.getElementById('status').textContent = message;
+        }
+
+        // Start with welcome message
+        window.onload = function() {
+            updateStatus('📞 Ready to call - Click "Start Call" to begin');
+        };
+    </script>
+</body>
+</html>
