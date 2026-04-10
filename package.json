@@ -1,0 +1,28 @@
+{
+  "name": "telemer-bot",
+  "version": "1.0.0",
+  "description": "AI-Powered Medical Consultation System",
+  "main": "api/calls.js",
+  "scripts": {
+    "dev": "vercel dev",
+    "build": "vercel build",
+    "deploy": "vercel --prod"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"
+  },
+  "devDependencies": {
+    "vercel": "^28.4.8"
+  },
+  "keywords": [
+    "medical",
+    "ai",
+    "telemer",
+    "healthcare",
+    "webrtc",
+    "family-tracking",
+    "medical-coding"
+  ],
+  "author": "TeleMER Team",
+  "license": "MIT"
+}

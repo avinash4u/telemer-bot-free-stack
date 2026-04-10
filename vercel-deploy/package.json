@@ -1,0 +1,18 @@
+{
+  "name": "telemer-bot-frontend",
+  "version": "1.0.0",
+  "description": "TeleMER Bot Frontend - AI Medical Consultation",
+  "scripts": {
+    "build": "echo 'Static build complete'",
+    "vercel-build": "echo 'Static build complete'"
+  },
+  "keywords": [
+    "medical",
+    "ai",
+    "telemer",
+    "healthcare",
+    "webrtc"
+  ],
+  "author": "avinashkumar.avi@gmail.com",
+  "license": "MIT"
+}

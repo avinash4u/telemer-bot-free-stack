@@ -1,0 +1,8 @@
+{
+  "version": 2,
+  "outputDirectory": "public",
+  "buildCommand": "echo 'No build required'",
+  "installCommand": "echo 'No install required'",
+  "framework": null,
+  "public": true
+}
