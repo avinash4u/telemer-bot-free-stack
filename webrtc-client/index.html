@@ -228,7 +228,7 @@
         function processUserInput(text) {
             if (!callId) return;
 
-            addTranscript('👤 You: ' + text, 'user');
+            addTranscript('You: ' + text, 'user');
 
             // Send to AI processing
             fetch(`http://localhost:8000/calls/${callId}/utterance`, {
@@ -245,42 +245,165 @@
             .then(data => {
                 console.log('AI Response:', data);
                 
+                // Display medical codes if available
+                if (data.medical_codes && data.medical_codes.icd10_codes && data.medical_codes.icd10_codes.length > 0) {
+                    displayMedicalCodes(data.medical_codes);
+                }
+                
+                // Display family member information if available
+                if (data.family_record) {
+                    displayFamilyRecord(data.family_record);
+                }
+                
                 // Generate AI response based on intent and sentiment
                 let aiResponse = generateAIResponse(data);
-                addTranscript('🤖 TeleMER: ' + aiResponse, 'ai');
+                addTranscript('TeleMER: ' + aiResponse, 'ai');
                 
                 // Speak response
                 speakResponse(aiResponse);
+                
+                // End call if should_end_call is true
+                if (data.should_end_call) {
+                    setTimeout(() => {
+                        hangupCall();
+                        updateStatus('Call ended - Thank you for using TeleMER!');
+                    }, 3000); // Wait 3 seconds before ending
+                }
             })
             .catch(error => {
                 console.error('Error processing utterance:', error);
-                addTranscript('🤖 TeleMER: Sorry, I had trouble processing that. Please try again.', 'ai');
+                addTranscript('TeleMER: Sorry, I had trouble processing that. Please try again.', 'ai');
             });
+        }
+
+        function displayMedicalCodes(medicalCodes) {
+            const codesDiv = document.createElement('div');
+            codesDiv.style.cssText = `
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 10px;
+                padding: 15px;
+                margin: 10px 0;
+                border-left: 4px solid #4CAF50;
+            `;
+            
+            let html = '<div style="font-weight: bold; color: #4CAF50; margin-bottom: 10px;">Medical Analysis:</div>';
+            
+            if (medicalCodes.symptoms && medicalCodes.symptoms.length > 0) {
+                html += `<div style="margin: 5px 0;"><strong>Symptoms:</strong> ${medicalCodes.symptoms.join(', ')}</div>`;
+            }
+            
+            if (medicalCodes.icd10_codes && medicalCodes.icd10_codes.length > 0) {
+                html += `<div style="margin: 5px 0;"><strong>ICD-10 Codes:</strong> ${medicalCodes.icd10_codes.join(', ')}</div>`;
+            }
+            
+            if (medicalCodes.descriptions && medicalCodes.descriptions.length > 0) {
+                html += `<div style="margin: 5px 0; font-size: 0.9em; opacity: 0.8;">${medicalCodes.descriptions.slice(0, 2).join('; ')}</div>`;
+            }
+            
+            codesDiv.innerHTML = html;
+            
+            // Add to transcript
+            const transcriptDiv = document.getElementById('transcript');
+            transcriptDiv.appendChild(codesDiv);
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
+        }
+
+        function displayFamilyRecord(familyRecord) {
+            if (!familyRecord || familyRecord.family_member === 'self') return;
+            
+            const familyDiv = document.createElement('div');
+            familyDiv.style.cssText = `
+                background: rgba(255, 255, 255, 0.15);
+                border-radius: 10px;
+                padding: 15px;
+                margin: 10px 0;
+                border-left: 4px solid #2196F3;
+            `;
+            
+            const memberName = familyRecord.family_member.charAt(0).toUpperCase() + familyRecord.family_member.slice(1);
+            let html = `<div style="font-weight: bold; color: #2196F3; margin-bottom: 10px;">Family Member Record:</div>`;
+            html += `<div style="margin: 5px 0;"><strong>Member:</strong> ${memberName}</div>`;
+            
+            if (familyRecord.condition_text) {
+                html += `<div style="margin: 5px 0;"><strong>Condition:</strong> ${familyRecord.condition_text}</div>`;
+            }
+            
+            if (familyRecord.symptoms && familyRecord.symptoms.length > 0) {
+                html += `<div style="margin: 5px 0;"><strong>Symptoms:</strong> ${familyRecord.symptoms.join(', ')}</div>`;
+            }
+            
+            if (familyRecord.medical_codes && familyRecord.medical_codes.icd10_codes && familyRecord.medical_codes.icd10_codes.length > 0) {
+                html += `<div style="margin: 5px 0;"><strong>ICD-10 Codes:</strong> ${familyRecord.medical_codes.icd10_codes.join(', ')}</div>`;
+            }
+            
+            familyDiv.innerHTML = html;
+            
+            // Add to transcript
+            const transcriptDiv = document.getElementById('transcript');
+            transcriptDiv.appendChild(familyDiv);
+            transcriptDiv.scrollTop = transcriptDiv.scrollHeight;
         }
 
         function generateAIResponse(data) {
             const intent = data.nlu?.intent?.name || 'unknown';
             const sentiment = data.sentiment?.negative || 0;
+            const symptoms = data.symptoms || [];
+            const medicalCodes = data.medical_codes || {};
+            const complexity = data.complexity_assessment || {};
+            const familyRecord = data.family_record;
+            const shouldEndCall = data.should_end_call || false;
 
             // Check for LLM errors
             if (data.error || (data.nlu && data.nlu.error)) {
                 return 'I understand you. My AI processing is currently limited, but I can still help. Would you like me to connect you with a human agent?';
             }
 
-            if (intent === 'nil_disclosure') {
-                return 'Thank you for letting me know. Is there anything else I can help you with today?';
-            } else if (intent === 'has_disclosure') {
-                return 'I understand you have medical information to share. Let me help you with that process. I can connect you with a healthcare professional to discuss your medical details.';
-            } else if (sentiment > 0.8) {
+            // Handle call ending
+            if (shouldEndCall || intent === 'nil_disclosure') {
+                if (symptoms.length === 0) {
+                    return 'Thank you for your time. I hope you have a wonderful day! Take care.';
+                } else {
+                    return 'Thank you for sharing this information. Your health records have been updated. Have a great day!';
+                }
+            }
+
+            // Handle medical disclosure with coding
+            if (intent === 'has_disclosure' && symptoms.length > 0) {
+                let response = 'I\'ve analyzed your symptoms and generated medical codes. ';
+                
+                // Add family member information
+                if (familyRecord && familyRecord.family_member !== 'self') {
+                    const memberName = familyRecord.family_member.charAt(0).toUpperCase() + familyRecord.family_member.slice(1);
+                    response += `Recorded for ${memberName}: `;
+                }
+                
+                if (medicalCodes.symptoms && medicalCodes.symptoms.length > 0) {
+                    response += `Symptoms identified: ${medicalCodes.symptoms.join(', ')}. `;
+                }
+                
+                if (medicalCodes.icd10_codes && medicalCodes.icd10_codes.length > 0) {
+                    response += `Medical codes (ICD-10): ${medicalCodes.icd10_codes.join(', ')}. `;
+                }
+
+                if (complexity.requires_consultation) {
+                    response += complexity.recommendation + ' I can connect you with a healthcare professional.';
+                    return response;
+                } else {
+                    response += 'Your symptoms appear to be manageable. Thank you for sharing this information with TeleMER. Is there anything else I can help you with today?';
+                    return response;
+                }
+            }
+
+            if (sentiment > 0.8) {
                 return 'I understand you may be frustrated. Let me connect you with a human agent who can better assist you.';
             } else if (intent === 'affirm') {
                 return 'Great! Thank you for confirming. How else can I help you today?';
             } else if (intent === 'deny') {
                 return 'I understand. Is there anything else I can assist you with?';
             } else if (intent === 'greet') {
-                return 'Hello! Welcome to TeleMER. How can I assist you today?';
+                return 'Hello! Welcome to TeleMER. How can I assist you today? Please share any medical symptoms or health concerns you may have for yourself or family members.';
             } else {
-                return 'Thank you for sharing that. I\'m here to help. Could you tell me more about what you need?';
+                return 'Thank you for sharing that. I\'m here to help. Could you tell me more about your symptoms or health concerns?';
             }
         }
 
